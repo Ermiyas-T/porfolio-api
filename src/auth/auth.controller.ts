@@ -1,15 +1,46 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  Res,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
 
   // POST /auth/login — returns { accessToken } on success, 401 on bad credentials
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
+  async login(
+    @Body() dto: LoginDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const result = await this.authService.login(dto);
+    const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
+
+    response.cookie(
+      this.configService.get<string>('AUTH_COOKIE_NAME', 'portfolio_admin_token'),
+      result.accessToken,
+      {
+        httpOnly: true,
+        // Production cross-origin cookies require SameSite=None and Secure together
+        sameSite: isProduction ? 'none' : 'lax',
+        secure: isProduction,
+        path: '/',
+        maxAge: this.configService.get<number>('AUTH_COOKIE_MAX_AGE_MS', 604800000),
+      },
+    );
+
+    return result;
   }
 }
