@@ -17,8 +17,8 @@ import { JwtStrategy } from './jwt.strategy';
         secret: configService.get<string>('JWT_SECRET'),
         signOptions: {
           // 7-day expiry balances convenience (single admin) with security
-          // cast needed because ConfigService returns string but @nestjs/jwt expects StringValue
-          expiresIn: (configService.get<string>('JWT_EXPIRES_IN', '7d') as unknown) as number,
+          // ConfigService returns string which is compatible at runtime with jwt.SignOptions
+          expiresIn: configService.get<string>('JWT_EXPIRES_IN', '7d') as any,
         },
       }),
     }),
