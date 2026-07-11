@@ -31,6 +31,7 @@ export class PostsService {
     });
   }
 
+  // Internal lookup used by admin routes and relations — returns any status
   async findBySlug(slug: string): Promise<Post> {
     const post = await this.prisma.post.findUnique({ where: { slug } });
     // Surface 404 early — never return null to the controller
@@ -38,8 +39,18 @@ export class PostsService {
     return post;
   }
 
+  // Public lookup — only returns PUBLISHED posts, never leaks DRAFT content
+  async findPublishedBySlug(slug: string): Promise<Post> {
+    const post = await this.prisma.post.findFirst({
+      where: { slug, status: PostStatus.PUBLISHED },
+    });
+    if (!post) throw new NotFoundException(`Post "${slug}" not found`);
+    return post;
+  }
+
   async findRelated(slug: string): Promise<Post[]> {
-    const post = await this.findBySlug(slug);
+    // Source post must be published — don't suggest relations for unpublished content
+    const post = await this.findPublishedBySlug(slug);
     // Match same category first, fall back to any published; exclude the current post
     return this.prisma.post.findMany({
       where: {
@@ -79,6 +90,12 @@ export class PostsService {
   async update(slug: string, dto: UpdatePostDto): Promise<Post> {
     // Verify existence before update so we get a clean 404 rather than a Prisma error
     await this.findBySlug(slug);
+
+    // Guard against slug conflicts when the client requests a rename
+    if (dto.slug && dto.slug !== slug) {
+      const existing = await this.prisma.post.findUnique({ where: { slug: dto.slug } });
+      if (existing) throw new ConflictException(`Slug "${dto.slug}" is already in use`);
+    }
 
     const extra: Partial<{ readingTime: number; publishedAt: Date }> = {};
     if (dto.content) {
