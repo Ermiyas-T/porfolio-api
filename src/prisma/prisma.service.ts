@@ -1,16 +1,17 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 @Injectable()
 // Wraps PrismaClient to integrate with NestJS lifecycle — connect on module init
 export class PrismaService extends PrismaClient implements OnModuleInit {
   private readonly logger = new Logger(PrismaService.name);
 
-  constructor(private readonly configService: ConfigService) {
-    // Prisma 7: URL is passed via the config file (prisma.config.ts),
-    // PrismaClient itself reads DATABASE_URL from env at runtime
-    super();
+  constructor(configService: ConfigService) {
+    // Prisma 7 requires a driver adapter to be passed in the constructor
+    const adapter = new PrismaPg({ connectionString: configService.get<string>('DATABASE_URL') });
+    super({ adapter });
   }
 
   async onModuleInit(): Promise<void> {
