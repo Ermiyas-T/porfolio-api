@@ -6,11 +6,13 @@ import {
   HttpStatus,
   Res,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -19,6 +21,10 @@ export class AuthController {
   ) {}
 
   // POST /auth/login — returns { accessToken } on success, 401 on bad credentials
+  @ApiOperation({ summary: 'Authenticate admin user' })
+  @ApiBody({ type: LoginDto })
+  @ApiResponse({ status: 200, description: 'Login successful, JWT set as cookie and returned in body' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(

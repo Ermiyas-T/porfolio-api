@@ -1,6 +1,7 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { ClassSerializerInterceptor } from '@nestjs/common';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { ConfigService } from '@nestjs/config';
@@ -9,6 +10,17 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   const logger = new Logger('Bootstrap');
+
+  // ── Swagger / OpenAPI ──────────────────────────────────────────────────────
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Portfolio API')
+    .setDescription('Blog content and admin management API for the portfolio site')
+    .setVersion('1.0')
+    .addBearerAuth()               // JWT Bearer token support in Swagger UI
+    .addCookieAuth('portfolio_admin_token') // HttpOnly cookie auth support
+    .build();
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api/docs', app, document);
 
   // Global ValidationPipe: strip unknown fields (whitelist) and reject requests with extra fields
   app.useGlobalPipes(
