@@ -1,7 +1,11 @@
-import { PrismaClient, PostStatus } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
-import * as bcrypt from 'bcrypt';
+// CommonJS seed script — load .env, then seed with Prisma 7 adapter
+const { config } = require('dotenv');
+config({ path: require('path').resolve(__dirname, '..', '.env') });
+
+const { Pool } = require('pg');
+const { PrismaPg } = require('@prisma/adapter-pg');
+const { PrismaClient, PostStatus } = require('@prisma/client');
+const bcrypt = require('bcrypt');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -12,7 +16,7 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL ?? 'admin@example.com';
-const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? 'changeme_32chars!!';
+const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? 'ermi1234';
 
 async function main() {
   const hash = await bcrypt.hash(ADMIN_PASSWORD, 12);
@@ -29,7 +33,7 @@ async function main() {
       slug: 'hello-world',
       title: 'Hello World',
       description: 'My first blog post on this portfolio.',
-      content: `# Hello World\n\nWelcome to my blog. This is a sample post seeded from the migration script.\n\nMore content coming soon!`,
+      content: '# Hello World\n\nWelcome to my blog. This is a sample post seeded from the migration script.\n\nMore content coming soon!',
       category: 'General',
       tags: ['intro', 'hello'],
       featured: true,
