@@ -13,7 +13,14 @@ export class PostsService {
 
   // Reading time heuristic: ~200 words per minute, minimum 1 minute
   private computeReadingTime(content: string): number {
-    const wordCount = content.trim().split(/\s+/).length;
+    // Strip Markdown syntax before counting words for a more accurate estimate
+    const cleanText = content
+      .replace(/^#{1,6}\s+/gm, '')          // remove heading markers
+      .replace(/!\[.*?\]\(.*?\)/g, '')      // remove image syntax
+      .replace(/\[([^\]]*)\]\(.*?\)/g, '$1') // keep link text, drop URL
+      .replace(/`{1,3}[^`]*`{1,3}/g, '')    // remove inline/code blocks
+      .replace(/[*_~]{1,2}([^*_~]+)[*_~]{1,2}/g, '$1'); // keep emphasis text
+    const wordCount = cleanText.trim().split(/\s+/).filter(Boolean).length;
     return Math.max(1, Math.ceil(wordCount / 200));
   }
 
