@@ -4,11 +4,16 @@ import { z } from 'zod';
 import { PrismaModule } from './prisma/prisma.module';
 import { PostsModule } from './posts/posts.module';
 import { AuthModule } from './auth/auth.module';
+import { UploadModule } from './upload/upload.module';
 
 const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   JWT_SECRET: z.string().min(32),
   JWT_EXPIRES_IN: z.string().default('7d'),
+  FRONTEND_URL: z.string().url(),
+  CLOUDINARY_CLOUD_NAME: z.string().min(1),
+  CLOUDINARY_API_KEY: z.string().min(1),
+  CLOUDINARY_API_SECRET: z.string().min(1),
   PORT: z.coerce.number().default(3001),
 });
 
@@ -31,6 +36,7 @@ function validate(config: Record<string, unknown>) {
     PrismaModule,
     PostsModule,
     AuthModule,
+    UploadModule,
   ],
 })
 export class AppModule {}
