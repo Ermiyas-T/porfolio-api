@@ -48,9 +48,7 @@ describe('Portfolio API (e2e)', () => {
 
   describe('Admin Auth Guard', () => {
     it('GET /admin/posts returns 401 without token', () => {
-      return request(app.getHttpServer())
-        .get('/admin/posts')
-        .expect(401);
+      return request(app.getHttpServer()).get('/admin/posts').expect(401);
     });
 
     it('POST /admin/posts returns 401 without token', () => {
@@ -74,9 +72,7 @@ describe('Portfolio API (e2e)', () => {
     });
 
     it('POST /upload returns 401 without token', () => {
-      return request(app.getHttpServer())
-        .post('/upload')
-        .expect(401);
+      return request(app.getHttpServer()).post('/upload').expect(401);
     });
   });
 

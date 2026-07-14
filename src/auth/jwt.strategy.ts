@@ -9,7 +9,10 @@ export interface JwtPayload {
   email: string;
 }
 
-function extractCookieToken(request: Request, cookieName: string): string | null {
+function extractCookieToken(
+  request: Request,
+  cookieName: string,
+): string | null {
   const cookieHeader = request.headers.cookie;
   if (!cookieHeader) return null;
 
@@ -28,7 +31,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   private readonly logger = new Logger(JwtStrategy.name);
 
   constructor(configService: ConfigService) {
-    const cookieName = configService.get<string>('AUTH_COOKIE_NAME', 'portfolio_admin_token');
+    const cookieName = configService.get<string>(
+      'AUTH_COOKIE_NAME',
+      'portfolio_admin_token',
+    );
 
     super({
       // Prefer HttpOnly cookie auth for browsers, keep Bearer support for curl/Insomnia

@@ -15,10 +15,10 @@ export class PostsService {
   private computeReadingTime(content: string): number {
     // Strip Markdown syntax before counting words for a more accurate estimate
     const cleanText = content
-      .replace(/^#{1,6}\s+/gm, '')          // remove heading markers
-      .replace(/!\[.*?\]\(.*?\)/g, '')      // remove image syntax
+      .replace(/^#{1,6}\s+/gm, '') // remove heading markers
+      .replace(/!\[.*?\]\(.*?\)/g, '') // remove image syntax
       .replace(/\[([^\]]*)\]\(.*?\)/g, '$1') // keep link text, drop URL
-      .replace(/`{1,3}[^`]*`{1,3}/g, '')    // remove inline/code blocks
+      .replace(/`{1,3}[^`]*`{1,3}/g, '') // remove inline/code blocks
       .replace(/[*_~]{1,2}([^*_~]+)[*_~]{1,2}/g, '$1'); // keep emphasis text
     const wordCount = cleanText.trim().split(/\s+/).filter(Boolean).length;
     return Math.max(1, Math.ceil(wordCount / 200));
@@ -70,8 +70,11 @@ export class PostsService {
 
   async create(dto: CreatePostDto): Promise<Post> {
     // Guard against duplicate slugs before hitting the DB unique constraint
-    const existing = await this.prisma.post.findUnique({ where: { slug: dto.slug } });
-    if (existing) throw new ConflictException(`Slug "${dto.slug}" is already in use`);
+    const existing = await this.prisma.post.findUnique({
+      where: { slug: dto.slug },
+    });
+    if (existing)
+      throw new ConflictException(`Slug "${dto.slug}" is already in use`);
 
     const readingTime = this.computeReadingTime(dto.content);
     const publishedAt =
@@ -93,8 +96,11 @@ export class PostsService {
 
     // Guard against slug conflicts when the client requests a rename
     if (dto.slug && dto.slug !== slug) {
-      const existing = await this.prisma.post.findUnique({ where: { slug: dto.slug } });
-      if (existing) throw new ConflictException(`Slug "${dto.slug}" is already in use`);
+      const existing = await this.prisma.post.findUnique({
+        where: { slug: dto.slug },
+      });
+      if (existing)
+        throw new ConflictException(`Slug "${dto.slug}" is already in use`);
     }
 
     const extra: Partial<{ readingTime: number; publishedAt: Date }> = {};

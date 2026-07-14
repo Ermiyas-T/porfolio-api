@@ -14,9 +14,11 @@ async function bootstrap() {
   // ── Swagger / OpenAPI ──────────────────────────────────────────────────────
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Portfolio API')
-    .setDescription('Blog content and admin management API for the portfolio site')
+    .setDescription(
+      'Blog content and admin management API for the portfolio site',
+    )
     .setVersion('1.0')
-    .addBearerAuth()               // JWT Bearer token support in Swagger UI
+    .addBearerAuth() // JWT Bearer token support in Swagger UI
     .addCookieAuth('portfolio_admin_token') // HttpOnly cookie auth support
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);

@@ -23,7 +23,10 @@ export class AuthController {
   // POST /auth/login — returns { accessToken } on success, 401 on bad credentials
   @ApiOperation({ summary: 'Authenticate admin user' })
   @ApiBody({ type: LoginDto })
-  @ApiResponse({ status: 200, description: 'Login successful, JWT set as cookie and returned in body' })
+  @ApiResponse({
+    status: 200,
+    description: 'Login successful, JWT set as cookie and returned in body',
+  })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -32,10 +35,14 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     const result = await this.authService.login(dto);
-    const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
+    const isProduction =
+      this.configService.get<string>('NODE_ENV') === 'production';
 
     response.cookie(
-      this.configService.get<string>('AUTH_COOKIE_NAME', 'portfolio_admin_token'),
+      this.configService.get<string>(
+        'AUTH_COOKIE_NAME',
+        'portfolio_admin_token',
+      ),
       result.accessToken,
       {
         httpOnly: true,
@@ -43,7 +50,10 @@ export class AuthController {
         sameSite: isProduction ? 'none' : 'lax',
         secure: isProduction,
         path: '/',
-        maxAge: this.configService.get<number>('AUTH_COOKIE_MAX_AGE_MS', 604800000),
+        maxAge: this.configService.get<number>(
+          'AUTH_COOKIE_MAX_AGE_MS',
+          604800000,
+        ),
       },
     );
 

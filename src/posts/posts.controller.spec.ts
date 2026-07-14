@@ -55,22 +55,34 @@ describe('PostsController', () => {
 
   describe('admin routes - JwtAuthGuard metadata', () => {
     it('GET /admin/posts has JwtAuthGuard applied', () => {
-      const guards = Reflect.getMetadata('__guards__', PostsController.prototype.findAll);
+      const guards = Reflect.getMetadata(
+        '__guards__',
+        PostsController.prototype.findAll,
+      );
       expect(guards).toBeDefined();
     });
 
     it('POST /admin/posts has JwtAuthGuard applied', () => {
-      const guards = Reflect.getMetadata('__guards__', PostsController.prototype.create);
+      const guards = Reflect.getMetadata(
+        '__guards__',
+        PostsController.prototype.create,
+      );
       expect(guards).toBeDefined();
     });
 
     it('PATCH /admin/posts/:slug has JwtAuthGuard applied', () => {
-      const guards = Reflect.getMetadata('__guards__', PostsController.prototype.update);
+      const guards = Reflect.getMetadata(
+        '__guards__',
+        PostsController.prototype.update,
+      );
       expect(guards).toBeDefined();
     });
 
     it('DELETE /admin/posts/:slug has JwtAuthGuard applied', () => {
-      const guards = Reflect.getMetadata('__guards__', PostsController.prototype.remove);
+      const guards = Reflect.getMetadata(
+        '__guards__',
+        PostsController.prototype.remove,
+      );
       expect(guards).toBeDefined();
     });
   });
