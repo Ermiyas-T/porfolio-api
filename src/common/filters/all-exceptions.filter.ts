@@ -24,10 +24,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
     // Log the full error server-side for debugging, never send it to the client
-    this.logger.error(
-      `${request.method} ${request.url} → ${status}`,
-      exception instanceof Error ? exception.stack : String(exception),
-    );
+    const traceOrDetail =
+      exception instanceof Error
+        ? exception.stack
+        : JSON.stringify(exception, Object.getOwnPropertyNames(exception));
+    this.logger.error(`${request.method} ${request.url} → ${status}`, traceOrDetail);
 
     // Consistent error shape for all API consumers
     response.status(status).json({
