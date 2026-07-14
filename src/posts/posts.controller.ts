@@ -10,7 +10,12 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -59,6 +64,18 @@ export class PostsController {
   findAll() {
     // Returns all posts including DRAFTs — guarded so only admin can access
     return this.postsService.findAll();
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get a post by slug including drafts (admin)' })
+  @ApiResponse({ status: 200, description: 'Post found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Post not found' })
+  @UseGuards(JwtAuthGuard)
+  @Get('admin/posts/:slug')
+  findByAdminSlug(@Param('slug') slug: string) {
+    // Admin route — returns post regardless of status (DRAFT or PUBLISHED)
+    return this.postsService.findBySlug(slug);
   }
 
   @ApiBearerAuth()
