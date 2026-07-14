@@ -35,8 +35,18 @@ describe('PostsService', () => {
   describe('findAllPublished', () => {
     it('returns only published posts ordered by publishedAt desc', async () => {
       const posts = [
-        { id: '1', slug: 'post-2', status: PostStatus.PUBLISHED, publishedAt: new Date('2024-01-02') },
-        { id: '2', slug: 'post-1', status: PostStatus.PUBLISHED, publishedAt: new Date('2024-01-01') },
+        {
+          id: '1',
+          slug: 'post-2',
+          status: PostStatus.PUBLISHED,
+          publishedAt: new Date('2024-01-02'),
+        },
+        {
+          id: '2',
+          slug: 'post-1',
+          status: PostStatus.PUBLISHED,
+          publishedAt: new Date('2024-01-01'),
+        },
       ];
       mockPrisma.post.findMany.mockResolvedValue(posts);
 
@@ -63,7 +73,9 @@ describe('PostsService', () => {
     it('throws NotFoundException when post does not exist', async () => {
       mockPrisma.post.findUnique.mockResolvedValue(null);
 
-      await expect(service.findBySlug('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.findBySlug('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -83,13 +95,20 @@ describe('PostsService', () => {
     it('throws NotFoundException for DRAFT posts', async () => {
       mockPrisma.post.findFirst.mockResolvedValue(null);
 
-      await expect(service.findPublishedBySlug('draft-post')).rejects.toThrow(NotFoundException);
+      await expect(service.findPublishedBySlug('draft-post')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('findRelated', () => {
     it('returns up to 3 related published posts in same category', async () => {
-      const post = { id: '1', slug: 'current', category: 'tech', status: PostStatus.PUBLISHED };
+      const post = {
+        id: '1',
+        slug: 'current',
+        category: 'tech',
+        status: PostStatus.PUBLISHED,
+      };
       const related = [
         { id: '2', slug: 'related-1', category: 'tech' },
         { id: '3', slug: 'related-2', category: 'tech' },
@@ -114,18 +133,25 @@ describe('PostsService', () => {
     it('throws NotFoundException when source post is not published', async () => {
       mockPrisma.post.findFirst.mockResolvedValue(null);
 
-      await expect(service.findRelated('draft-post')).rejects.toThrow(NotFoundException);
+      await expect(service.findRelated('draft-post')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('findAll', () => {
     it('returns all posts ordered by createdAt desc', async () => {
-      const posts = [{ id: '1', slug: 'post-1' }, { id: '2', slug: 'post-2' }];
+      const posts = [
+        { id: '1', slug: 'post-1' },
+        { id: '2', slug: 'post-2' },
+      ];
       mockPrisma.post.findMany.mockResolvedValue(posts);
 
       const result = await service.findAll();
 
-      expect(mockPrisma.post.findMany).toHaveBeenCalledWith({ orderBy: { createdAt: 'desc' } });
+      expect(mockPrisma.post.findMany).toHaveBeenCalledWith({
+        orderBy: { createdAt: 'desc' },
+      });
       expect(result).toEqual(posts);
     });
   });
@@ -143,7 +169,12 @@ describe('PostsService', () => {
 
     it('creates a post with computed readingTime', async () => {
       mockPrisma.post.findUnique.mockResolvedValue(null);
-      mockPrisma.post.create.mockResolvedValue({ ...createDto, id: '1', readingTime: 1, status: PostStatus.DRAFT });
+      mockPrisma.post.create.mockResolvedValue({
+        ...createDto,
+        id: '1',
+        readingTime: 1,
+        status: PostStatus.DRAFT,
+      });
 
       const result = await service.create(createDto);
 
@@ -159,7 +190,12 @@ describe('PostsService', () => {
 
     it('sets publishedAt when status is PUBLISHED', async () => {
       mockPrisma.post.findUnique.mockResolvedValue(null);
-      mockPrisma.post.create.mockResolvedValue({ ...createDto, id: '1', status: PostStatus.PUBLISHED, publishedAt: expect.any(Date) });
+      mockPrisma.post.create.mockResolvedValue({
+        ...createDto,
+        id: '1',
+        status: PostStatus.PUBLISHED,
+        publishedAt: expect.any(Date),
+      });
 
       await service.create({ ...createDto, status: PostStatus.PUBLISHED });
 
@@ -170,21 +206,60 @@ describe('PostsService', () => {
       });
     });
 
-    it('throws ConflictException when slug already exists', async () => {
-      mockPrisma.post.findUnique.mockResolvedValue({ id: 'existing', slug: 'new-post' });
+    it('preserves fenced code block language metadata', async () => {
+      const markdownWithLanguage = [
+        '# Typed example',
+        '',
+        '```tsx',
+        'const label: string = "Save";',
+        '```',
+      ].join('\n');
+      const dto = { ...createDto, content: markdownWithLanguage };
+      mockPrisma.post.findUnique.mockResolvedValue(null);
+      mockPrisma.post.create.mockResolvedValue({
+        ...dto,
+        id: '1',
+        readingTime: 1,
+        status: PostStatus.DRAFT,
+      });
 
-      await expect(service.create(createDto)).rejects.toThrow(ConflictException);
+      await service.create(dto);
+
+      expect(mockPrisma.post.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          content: markdownWithLanguage,
+        }),
+      });
+    });
+
+    it('throws ConflictException when slug already exists', async () => {
+      mockPrisma.post.findUnique.mockResolvedValue({
+        id: 'existing',
+        slug: 'new-post',
+      });
+
+      await expect(service.create(createDto)).rejects.toThrow(
+        ConflictException,
+      );
       expect(mockPrisma.post.create).not.toHaveBeenCalled();
     });
   });
 
   describe('update', () => {
-    const existingPost = { id: '1', slug: 'my-post', title: 'Old Title', publishedAt: null };
+    const existingPost = {
+      id: '1',
+      slug: 'my-post',
+      title: 'Old Title',
+      publishedAt: null,
+    };
 
     it('updates a post successfully', async () => {
       const updateDto = { title: 'New Title' };
       mockPrisma.post.findUnique.mockResolvedValue(existingPost);
-      mockPrisma.post.update.mockResolvedValue({ ...existingPost, ...updateDto });
+      mockPrisma.post.update.mockResolvedValue({
+        ...existingPost,
+        ...updateDto,
+      });
 
       const result = await service.update('my-post', updateDto);
 
@@ -198,21 +273,24 @@ describe('PostsService', () => {
     it('throws NotFoundException when post does not exist', async () => {
       mockPrisma.post.findUnique.mockResolvedValue(null);
 
-      await expect(service.update('nonexistent', { title: 'New' })).rejects.toThrow(NotFoundException);
+      await expect(
+        service.update('nonexistent', { title: 'New' }),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('throws ConflictException when new slug conflicts with existing post', async () => {
       mockPrisma.post.findUnique
-        .mockResolvedValueOnce(existingPost)   // first call: findBySlug
+        .mockResolvedValueOnce(existingPost) // first call: findBySlug
         .mockResolvedValueOnce({ id: '2', slug: 'taken-slug' }); // second call: conflict check
 
-      await expect(service.update('my-post', { slug: 'taken-slug' })).rejects.toThrow(ConflictException);
+      await expect(
+        service.update('my-post', { slug: 'taken-slug' }),
+      ).rejects.toThrow(ConflictException);
       expect(mockPrisma.post.update).not.toHaveBeenCalled();
     });
 
     it('does not check slug conflict when slug is unchanged', async () => {
-      mockPrisma.post.findUnique
-        .mockResolvedValueOnce(existingPost);  // findBySlug
+      mockPrisma.post.findUnique.mockResolvedValueOnce(existingPost); // findBySlug
       mockPrisma.post.update.mockResolvedValue(existingPost);
 
       await service.update('my-post', { slug: 'my-post' });
@@ -225,7 +303,11 @@ describe('PostsService', () => {
     it('recomputes readingTime when content changes', async () => {
       const updateDto = { content: 'word '.repeat(400) }; // ~400 words
       mockPrisma.post.findUnique.mockResolvedValue(existingPost);
-      mockPrisma.post.update.mockResolvedValue({ ...existingPost, ...updateDto, readingTime: 2 });
+      mockPrisma.post.update.mockResolvedValue({
+        ...existingPost,
+        ...updateDto,
+        readingTime: 2,
+      });
 
       await service.update('my-post', updateDto);
 
@@ -235,11 +317,40 @@ describe('PostsService', () => {
       });
     });
 
+    it('preserves code block language metadata when content changes', async () => {
+      const markdownWithLanguage = [
+        '# Updated example',
+        '',
+        '```typescript',
+        'type Status = "draft" | "published";',
+        '```',
+      ].join('\n');
+      const updateDto = { content: markdownWithLanguage };
+      mockPrisma.post.findUnique.mockResolvedValue(existingPost);
+      mockPrisma.post.update.mockResolvedValue({
+        ...existingPost,
+        ...updateDto,
+        readingTime: 1,
+      });
+
+      await service.update('my-post', updateDto);
+
+      expect(mockPrisma.post.update).toHaveBeenCalledWith({
+        where: { slug: 'my-post' },
+        data: expect.objectContaining({
+          content: markdownWithLanguage,
+        }),
+      });
+    });
+
     it('sets publishedAt when transitioning from DRAFT to PUBLISHED', async () => {
       mockPrisma.post.findUnique
-        .mockResolvedValueOnce(existingPost)   // findBySlug
-        .mockResolvedValueOnce(existingPost);  // current post for publishedAt check (publishedAt is null)
-      mockPrisma.post.update.mockResolvedValue({ ...existingPost, status: PostStatus.PUBLISHED });
+        .mockResolvedValueOnce(existingPost) // findBySlug
+        .mockResolvedValueOnce(existingPost); // current post for publishedAt check (publishedAt is null)
+      mockPrisma.post.update.mockResolvedValue({
+        ...existingPost,
+        status: PostStatus.PUBLISHED,
+      });
 
       await service.update('my-post', { status: PostStatus.PUBLISHED });
 
@@ -258,13 +369,17 @@ describe('PostsService', () => {
 
       await service.remove('my-post');
 
-      expect(mockPrisma.post.delete).toHaveBeenCalledWith({ where: { slug: 'my-post' } });
+      expect(mockPrisma.post.delete).toHaveBeenCalledWith({
+        where: { slug: 'my-post' },
+      });
     });
 
     it('throws NotFoundException when post does not exist', async () => {
       mockPrisma.post.findUnique.mockResolvedValue(null);
 
-      await expect(service.remove('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.remove('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
       expect(mockPrisma.post.delete).not.toHaveBeenCalled();
     });
   });
