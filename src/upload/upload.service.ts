@@ -8,23 +8,29 @@ export class UploadService {
   private readonly logger = new Logger(UploadService.name);
 
   constructor(private readonly configService: ConfigService) {
-    // Configure Cloudinary from env vars — do this once at service construction
-    cloudinary.config({
-      cloud_name: this.configService.get<string>('CLOUDINARY_CLOUD_NAME'),
-      api_key: this.configService.get<string>('CLOUDINARY_API_KEY'),
-      api_secret: this.configService.get<string>('CLOUDINARY_API_SECRET'),
-    });
+    const cloudName = this.configService.get<string>('CLOUDINARY_CLOUD_NAME');
+    const apiKey = this.configService.get<string>('CLOUDINARY_API_KEY');
+    const apiSecret = this.configService.get<string>('CLOUDINARY_API_SECRET');
+
+    if (!cloudName || !apiKey || !apiSecret) {
+      this.logger.error('Cloudinary credentials missing from env');
+    }
+
+    cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret });
   }
 
   async uploadImage(file: Express.Multer.File): Promise<{ url: string }> {
     if (!file) throw new BadRequestException('No file provided');
 
     const url = await new Promise<string>((resolve, reject) => {
-      // Stream the buffer directly to Cloudinary — avoids writing temp files to disk
       const uploadStream = cloudinary.uploader.upload_stream(
         { folder: 'portfolio-blog', resource_type: 'image' },
-        (error: Error | undefined, result: UploadApiResponse | undefined) => {
-          if (error || !result) return reject(error ?? new Error('Upload failed'));
+        (error, result) => {
+          if (error) {
+            this.logger.error(`Cloudinary upload error: ${JSON.stringify(error)}`);
+            return reject(new Error(typeof error === 'string' ? error : error.message || 'Upload failed'));
+          }
+          if (!result) return reject(new Error('Upload returned no result'));
           resolve(result.secure_url);
         },
       );
