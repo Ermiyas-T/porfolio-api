@@ -7,7 +7,9 @@ import { AuthModule } from './auth/auth.module';
 import { UploadModule } from './upload/upload.module';
 
 const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  NODE_ENV: z
+    .enum(['development', 'test', 'production'])
+    .default('development'),
   DATABASE_URL: z.string().url(),
   JWT_SECRET: z.string().min(32),
   JWT_EXPIRES_IN: z.string().default('7d'),
@@ -17,7 +19,7 @@ const envSchema = z.object({
   CLOUDINARY_CLOUD_NAME: z.string().min(1),
   CLOUDINARY_API_KEY: z.string().min(1),
   CLOUDINARY_API_SECRET: z.string().min(1),
-  PORT: z.coerce.number().default(3001),
+  PORT: z.coerce.number().default(5000),
 });
 
 function validate(config: Record<string, unknown>) {
@@ -42,4 +44,4 @@ function validate(config: Record<string, unknown>) {
     UploadModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }
