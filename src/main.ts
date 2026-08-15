@@ -37,7 +37,7 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter());
 
   // ClassSerializerInterceptor respects @Exclude() on response DTOs (e.g. password hash)
-  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+  // app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   const frontendUrl = configService.get<string>('FRONTEND_URL')!;
   // credentials: true is required for cross-origin cookie auth — must pair with
