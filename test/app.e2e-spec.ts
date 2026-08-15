@@ -23,6 +23,31 @@ describe('Portfolio API (e2e)', () => {
     await app.init();
   });
 
+  describe('Health Check', () => {
+    it('GET /health returns 200 or 503 with health status schema', () => {
+      return request(app.getHttpServer())
+        .get('/health')
+        .expect((res) => {
+          expect([200, 503]).toContain(res.status);
+          expect(res.body).toHaveProperty('status');
+          expect(res.body).toHaveProperty('timestamp');
+          expect(res.body).toHaveProperty('uptime');
+          expect(res.body).toHaveProperty('database');
+          expect(res.body.database).toHaveProperty('status');
+        });
+    });
+
+    it('GET / returns 200 or 503 with health status schema', () => {
+      return request(app.getHttpServer())
+        .get('/')
+        .expect((res) => {
+          expect([200, 503]).toContain(res.status);
+          expect(res.body).toHaveProperty('status');
+          expect(res.body).toHaveProperty('timestamp');
+        });
+    });
+  });
+
   describe('Public Posts', () => {
     it('GET /posts returns an array', () => {
       return request(app.getHttpServer())

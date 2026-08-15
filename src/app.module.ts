@@ -6,6 +6,8 @@ import { PostsModule } from './posts/posts.module';
 import { AuthModule } from './auth/auth.module';
 import { UploadModule } from './upload/upload.module';
 
+import { HealthModule } from './health/health.module';
+
 const envSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'test', 'production'])
@@ -42,6 +44,7 @@ function validate(config: Record<string, unknown>) {
     PostsModule,
     AuthModule,
     UploadModule,
+    HealthModule,
   ],
 })
 export class AppModule { }
